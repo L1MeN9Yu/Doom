@@ -1,0 +1,710 @@
+note: skipping Xcode version check
+usage: 
+  build-script [-h | --help] [OPTION ...]
+  build-script --preset=NAME [SUBSTITUTION ...]
+
+Use this tool to build, test, and prepare binary distribution archives of Swift
+and related tools.
+
+Builds Swift (and, optionally, LLDB), incrementally, optionally
+testing it thereafter.  Different build configurations are maintained in
+parallel.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -n, --dry-run         print the commands that would be executed, but do not
+                        execute them
+  --dump-config [BOOL]  instead of building, write JSON to stdout containing
+                        various values used to build in this configuration
+  --legacy-impl         use legacy implementation
+  --build-runtime-with-host-compiler [BOOL]
+                        Use the host compiler, not the self-built one to
+                        compile the Swift runtime
+  -i, --ios             also build for iOS, but disallow tests that require an
+                        iOS device
+  -I, --ios-all         also build for iOS, and allow all iOS tests
+  --skip-local-build [BOOL]
+                        set to skip building for the local platform
+  --skip-ios            set to skip everything iOS-related
+  --tvos [BOOL]         also build for tvOS, but disallow tests that require a
+                        tvos device
+  --tvos-all [BOOL]     also build for tvOS, and allow all tvOS tests
+  --skip-tvos           set to skip everything tvOS-related
+  --watchos [BOOL]      also build for watchOS, but disallow tests that
+                        require an watchOS device
+  --watchos-all [BOOL]  also build for Apple watchOS, and allow all Apple
+                        watchOS tests
+  --skip-watchos        set to skip everything watchOS-related
+  --maccatalyst [BOOL]  Enable building Swift with macCatalyst support
+  --maccatalyst-ios-tests [BOOL]
+                        When building for macCatalyst run tests with iOS-like
+                        target triple
+  --android [BOOL]      also build for Android
+  --swift-analyze-code-coverage [SWIFT_ANALYZE_CODE_COVERAGE]
+                        enable code coverage analysis in Swift (false, not-
+                        merged, merged).
+  --build-subdir PATH   name of the directory under $SWIFT_BUILD_ROOT where
+                        the build products will be placed
+  --relocate-xdg-cache-home-under-build-subdir
+                        relocate $XDG_CACHE_HOME to the same location where
+                        build products will be placed; this supports having
+                        multiple runs for different branches in CI bots for
+                        Linux
+  --install-prefix PATH
+                        The installation prefix. This is where built Swift
+                        products (like bin, lib, and include) will be
+                        installed.
+  --install-symroot PATH
+                        the path to install debug symbols into
+  --install-destdir PATH
+                        the path to use as the filesystem root for the
+                        installation
+  --install-all [BOOL]  Assume all built products should be installed
+  -j N, --jobs N        the number of parallel build jobs to use
+  --darwin-xcrun-toolchain DARWIN_XCRUN_TOOLCHAIN
+                        the name of the toolchain to use on Darwin
+  --cmake PATH          the path to a CMake executable that will be used to
+                        build Swift
+  --show-sdks [BOOL]    print installed Xcode and SDK versions
+  --extra-swift-args EXTRA_SWIFT_ARGS
+                        Pass through extra flags to swift in the form of a
+                        CMake list "module_regexp;flag". Can be called
+                        multiple times to add multiple such module_regexp flag
+                        pairs. All semicolons in flags must be escaped with a
+                        "\"
+  --host-cc PATH        the absolute path to CC, the "clang" compiler for the
+                        host platform. Default is auto detected.
+  --host-cxx PATH       the absolute path to CXX, the "clang++" compiler for
+                        the host platform. Default is auto detected.
+  --cmake-c-launcher PATH
+                        the absolute path to set CMAKE_C_COMPILER_LAUNCHER
+  --cmake-cxx-launcher PATH
+                        the absolute path to set CMAKE_CXX_COMPILER_LAUNCHER
+  --host-lipo PATH      the absolute path to lipo. Default is auto detected.
+  --host-libtool PATH   the absolute path to libtool. Default is auto
+                        detected.
+  --distcc [BOOL]       use distcc in pump mode
+  --sccache [BOOL]      use sccache
+  --enable-asan [BOOL]  enable Address Sanitizer
+  --enable-ubsan [BOOL]
+                        enable Undefined Behavior Sanitizer
+  --enable-tsan [BOOL]  enable Thread Sanitizer for swift tools
+  --enable-tsan-runtime [BOOL]
+                        enable Thread Sanitizer on the swift runtime
+  --enable-lsan [BOOL]  enable Leak Sanitizer for swift tools
+  --enable-sanitize-coverage [BOOL]
+                        enable sanitizer coverage for swift tools. Necessary
+                        for fuzzing swiftc
+  --compiler-vendor [COMPILER_VENDOR]
+                        Compiler vendor name
+  --clang-compiler-version MAJOR.MINOR.PATCH
+                        string that indicates a compiler version for Clang
+  --clang-user-visible-version MAJOR.MINOR.PATCH
+                        User-visible version of the embedded Clang and LLVM
+                        compilers
+  --swift-compiler-version MAJOR.MINOR
+                        string that indicates a compiler version for Swift
+  --swift-user-visible-version MAJOR.MINOR
+                        User-visible version of the embedded Swift compiler
+  --darwin-deployment-version-osx MAJOR.MINOR
+                        minimum deployment target version for OS X
+  --darwin-deployment-version-ios MAJOR.MINOR
+                        minimum deployment target version for iOS
+  --darwin-deployment-version-tvos MAJOR.MINOR
+                        minimum deployment target version for tvOS
+  --darwin-deployment-version-watchos MAJOR.MINOR
+                        minimum deployment target version for watchOS
+  --extra-cmake-options EXTRA_CMAKE_OPTIONS
+                        Pass through extra options to CMake in the form of
+                        comma separated options
+                        "-DCMAKE_VAR1=YES,-DCMAKE_VAR2=/tmp". Can be called
+                        multiple times to add multiple such options.
+  --build-args BUILD_ARGS
+                        arguments to the build tool. This would be prepended
+                        to the default argument that is "-j8" when CMake
+                        generator is "Ninja".
+  --verbose-build [BOOL]
+                        print the commands executed during the build
+  --lto [LTO_TYPE]      use lto optimization on llvm/swift tools. This does
+                        not imply using lto on the swift standard library or
+                        runtime. Options: thin, full. If no optional arg is
+                        provided, full is chosen by default
+  --clang-profile-instr-use PATH
+                        profile file to use for clang PGO
+  --llvm-max-parallel-lto-link-jobs COUNT
+                        the maximum number of parallel link jobs to use when
+                        compiling llvm
+  --swift-tools-max-parallel-lto-link-jobs COUNT
+                        the maximum number of parallel link jobs to use when
+                        compiling swift tools.
+  --dsymutil-jobs COUNT
+                        the maximum number of parallel dsymutil jobs to use
+                        when extracting symbols. Tweak with caution, since
+                        dsymutilis memory intensive.
+  --disable-guaranteed-normal-arguments
+                        Disable guaranteed normal arguments
+  --enable-stdlibcore-exclusivity-checking
+                        Enable exclusivity checking in stdlibCore
+  --force-optimized-typechecker
+                        Force the type checker to be built with optimization
+  --lit-args LITARGS    lit args to use when testing
+  --coverage-db PATH    coverage database to use when prioritizing testing
+  --llvm-install-components LLVM_INSTALL_COMPONENTS
+                        A semi-colon split list of llvm components to install
+
+Host and cross-compilation targets:
+  --host-target HOST_TARGET
+                        The host target. LLVM, Clang, and Swift will be built
+                        for this target. The built LLVM and Clang will be used
+                        to compile Swift for the cross-compilation targets.
+  --cross-compile-hosts CROSS_COMPILE_HOSTS
+                        A space separated list of targets to cross-compile
+                        host Swift tools for. Can be used multiple times.
+  --stdlib-deployment-targets STDLIB_DEPLOYMENT_TARGETS
+                        The targets to compile or cross-compile the Swift
+                        standard library for. None by default. Comma separated
+                        list: android-aarch64 android-armv7 android-x86_64
+                        appletvos-arm64 appletvsimulator-arm64
+                        appletvsimulator-x86_64 cygwin-x86_64 freebsd-x86_64
+                        freestanding-arm64 freestanding-arm64e freestanding-
+                        armv7 freestanding-armv7k freestanding-armv7s
+                        freestanding-i386 freestanding-x86_64 haiku-x86_64
+                        iphoneos-arm64 iphoneos-arm64e iphoneos-armv7
+                        iphoneos-armv7s iphonesimulator-arm64
+                        iphonesimulator-i386 iphonesimulator-x86_64 linux-
+                        aarch64 linux-armv6 linux-armv7 linux-i686 linux-
+                        powerpc64 linux-powerpc64le linux-s390x linux-x86_64
+                        macosx-arm64 macosx-arm64e macosx-x86_64 openbsd-amd64
+                        watchos-armv7k watchsimulator-arm64
+                        watchsimulator-i386 watchsimulator-x86_64 windows-
+                        x86_64
+  --build-stdlib-deployment-targets BUILD_STDLIB_DEPLOYMENT_TARGETS
+                        A space-separated list that filters which of the
+                        configured targets to build the Swift standard library
+                        for, or "all".
+  --swift-darwin-supported-archs ARCHS
+                        Semicolon-separated list of architectures to configure
+                        on Darwin platforms. If left empty all default
+                        architectures are configured.
+  --swift-darwin-module-archs ARCHS
+                        Semicolon-separated list of architectures to configure
+                        Swift module-only targets on Darwin platforms. These
+                        targets are in addition to the full library targets.
+
+Options to select projects:
+  --infer [BOOL]        Infer any downstream dependencies from enabled
+                        projects
+  -l [BOOL], --lldb [BOOL]
+                        build LLDB
+  -b [BOOL], --llbuild [BOOL]
+                        build llbuild
+  --libcxx [BOOL]       build libcxx
+  -p [BOOL], --swiftpm [BOOL]
+                        build swiftpm
+  --install-swiftpm [BOOL]
+                        install swiftpm
+  --swiftsyntax [BOOL]  build swiftSyntax
+  --skstresstester [BOOL]
+                        build the SourceKit stress tester
+  --swiftformat [BOOL]  build swift-format
+  --swiftevolve [BOOL]  build the swift-evolve tool
+  --swift-driver [BOOL]
+                        build swift-driver
+  --indexstore-db [BOOL]
+                        build IndexStoreDB
+  --test-indexstore-db-sanitize-all [BOOL]
+                        run indexstore-db tests under all sanitizers
+  --sourcekit-lsp [BOOL]
+                        build SourceKitLSP
+  --test-sourcekit-lsp-sanitize-all [BOOL]
+                        run sourcekit-lsp tests under all sanitizers
+  --install-swiftsyntax [BOOL]
+                        install SwiftSyntax
+  --swiftsyntax-verify-generated-files [BOOL]
+                        set to verify that the generated files in the source
+                        tree match the ones that would be generated from
+                        current main
+  --install-sourcekit-lsp [BOOL]
+                        install SourceKitLSP
+  --install-skstresstester [BOOL]
+                        install the SourceKit stress tester
+  --install-swift-driver [BOOL]
+                        install new Swift driver
+  --install-swiftevolve [BOOL]
+                        install SwiftEvolve
+  --toolchain-benchmarks [BOOL]
+                        build Swift Benchmarks using swiftpm against the just
+                        built toolchain
+  --swift-inspect [BOOL]
+                        build SwiftInspect using swiftpm against the just
+                        built toolchain
+  --xctest [BOOL]       build xctest
+  --foundation [BOOL]   build foundation
+  --libdispatch [BOOL]  build libdispatch
+  --libicu [BOOL]       build libicu
+  --playgroundsupport [BOOL]
+                        build PlaygroundSupport
+  --install-playgroundsupport [BOOL]
+                        install playground support
+  --build-ninja [BOOL]  build the Ninja tool
+  --build-libparser-only [BOOL]
+                        build only libParser for SwiftSyntax
+  --skip-build-clang-tools-extra [BOOL]
+                        skip building clang-tools-extra as part of llvm
+
+Extra actions to perform before or in addition to building:
+  -c, --clean           do a clean build
+  --export-compile-commands [BOOL]
+                        generate compilation databases in addition to building
+  --symbols-package PATH
+                        if provided, an archive of the symbols directory will
+                        be generated at this path
+
+Build variant:
+  -d, --debug           build the Debug variant of everything (LLVM, Clang,
+                        Swift host tools, target Swift standard libraries,
+                        LLDB) (default is None)
+  -r, --release-debuginfo
+                        build the RelWithDebInfo variant of everything
+                        (default is None)
+  -R, --release         build the Release variant of everything (default is
+                        None)
+  --min-size-release    build the MinSizeRel variant of everything (default is
+                        None)
+
+Override build variant for a specific project:
+  --debug-llvm          build the Debug variant of LLVM
+  --debug-swift         build the Debug variant of Swift host tools
+  --debug-swift-stdlib  build the Debug variant of the Swift standard library
+                        and SDK overlay
+  --debug-lldb          build the Debug variant of LLDB
+  --lldb-build-with-xcode
+                        build LLDB using xcodebuild, if possible
+  --lldb-build-with-cmake
+                        build LLDB using CMake
+  --debug-cmark         build the Debug variant of CommonMark
+  --debug-foundation    build the Debug variant of Foundation
+  --debug-libdispatch   build the Debug variant of libdispatch
+  --debug-libicu        build the Debug variant of libicu
+  -a, --assertions      enable assertions in all projects
+  -A, --no-assertions   disable assertions in all projects
+
+Control assertions in a specific project:
+  --cmark-assertions    enable assertions in CommonMark
+  --llvm-assertions     enable assertions in LLVM
+  --no-llvm-assertions  disable assertions in LLVM
+  --swift-assertions    enable assertions in Swift
+  --no-swift-assertions
+                        disable assertions in Swift
+  --swift-stdlib-assertions
+                        enable assertions in the Swift standard library
+  --no-swift-stdlib-assertions
+                        disable assertions in the Swift standard library
+  --lldb-assertions     enable assertions in LLDB
+  --no-lldb-assertions  disable assertions in LLDB
+  --llbuild-assertions  enable assertions in llbuild
+  --no-llbuild-assertions
+                        disable assertions in llbuild
+
+Select the CMake generator:
+  -e, --eclipse         use CMake's Eclipse generator (None by default)
+  -m, --make            use CMake's Makefile generator (None by default)
+  -x, --xcode           use CMake's Xcode generator (None by default)
+
+Run tests:
+  -t                    test Swift after building
+  --test [BOOL]         test Swift after building
+  -T                    run the validation test suite (implies --test)
+  --validation-test [BOOL]
+                        run the validation test suite (implies --test)
+  -o                    run the test suite in optimized mode too (implies
+                        --test)
+  --test-optimized [BOOL]
+                        run the test suite in optimized mode too (implies
+                        --test)
+  -s                    run the test suite in optimize for size mode too
+                        (implies --test)
+  --test-optimize-for-size [BOOL]
+                        run the test suite in optimize for size mode too
+                        (implies --test)
+  -y                    run the test suite in optimize none with implicit
+                        dynamic mode too (implies --test)
+  --test-optimize-none-with-implicit-dynamic [BOOL]
+                        run the test suite in optimize none with implicit
+                        dynamicmode too (implies --test)
+  --long-test [BOOL]    run the long test suite
+  --stress-test [BOOL]  run the stress test suite
+  --host-test [BOOL]    run executable tests on host devices (such as iOS or
+                        tvOS)
+  --only-executable-test [BOOL]
+                        Only run executable tests. Does nothing if host-test
+                        is not allowed
+  --only-non-executable-test [BOOL]
+                        Only run non-executable tests.
+  --test-paths TEST_PATHS
+                        run tests located in specific directories and/or files
+                        (implies --test and/or --validation-test)
+  -B, --benchmark       run the Swift Benchmark Suite after building
+  --benchmark-num-o-iterations N
+                        if the Swift Benchmark Suite is run after building,
+                        run N iterations with -O
+  --benchmark-num-onone-iterations N
+                        if the Swift Benchmark Suite is run after building,
+                        run N iterations with -Onone
+  --tsan-libdispatch-test [BOOL]
+                        Builds a new toolchain including the libdispatch C
+                        library. Then re-builds the TSan runtime (compiler-rt)
+                        using this freshly-built Clang and runs the TSan
+                        libdispatch tests.
+  --skip-test-osx [BOOL]
+                        skip testing Swift stdlibs for Mac OS X
+  --skip-test-linux [BOOL]
+                        skip testing Swift stdlibs for Linux
+  --skip-test-freebsd [BOOL]
+                        skip testing Swift stdlibs for FreeBSD
+  --skip-test-cygwin [BOOL]
+                        skip testing Swift stdlibs for Cygwin
+
+Run build:
+  --build-swift-dynamic-stdlib [BOOL]
+                        build dynamic variants of the Swift standard library
+  --build-swift-static-stdlib [BOOL]
+                        build static variants of the Swift standard library
+  --build-swift-dynamic-sdk-overlay [BOOL]
+                        build dynamic variants of the Swift SDK overlay
+  --build-swift-static-sdk-overlay [BOOL]
+                        build static variants of the Swift SDK overlay
+  --build-swift-stdlib-unittest-extra [BOOL]
+                        Build optional StdlibUnittest components
+  -S, --skip-build      generate build directory only without building
+  --skip-build-linux [BOOL]
+                        skip building Swift stdlibs for Linux
+  --skip-build-freebsd [BOOL]
+                        skip building Swift stdlibs for FreeBSD
+  --skip-build-cygwin [BOOL]
+                        skip building Swift stdlibs for Cygwin
+  --skip-build-osx [BOOL]
+                        skip building Swift stdlibs for MacOSX
+  --skip-build-ios [BOOL]
+                        skip building Swift stdlibs for iOS
+  --skip-build-ios-device [BOOL]
+                        skip building Swift stdlibs for iOS devices (i.e.
+                        build simulators only)
+  --skip-build-ios-simulator [BOOL]
+                        skip building Swift stdlibs for iOS simulator (i.e.
+                        build devices only)
+  --skip-build-tvos [BOOL]
+                        skip building Swift stdlibs for tvOS
+  --skip-build-tvos-device [BOOL]
+                        skip building Swift stdlibs for tvOS devices (i.e.
+                        build simulators only)
+  --skip-build-tvos-simulator [BOOL]
+                        skip building Swift stdlibs for tvOS simulator (i.e.
+                        build devices only)
+  --skip-build-watchos [BOOL]
+                        skip building Swift stdlibs for watchOS
+  --skip-build-watchos-device [BOOL]
+                        skip building Swift stdlibs for watchOS devices (i.e.
+                        build simulators only)
+  --skip-build-watchos-simulator [BOOL]
+                        skip building Swift stdlibs for watchOS simulator
+                        (i.e. build devices only)
+  --skip-build-android [BOOL]
+                        skip building Swift stdlibs for Android
+  --skip-build-benchmarks [BOOL]
+                        skip building Swift Benchmark Suite
+  --build-external-benchmarks [BOOL]
+                        skip building Swift Benchmark Suite
+
+Skip testing specified targets:
+  --skip-test-ios [BOOL]
+                        skip testing all iOS targets. Equivalent to specifying
+                        both --skip-test-ios-simulator and --skip-test-ios-
+                        host
+  --skip-test-ios-simulator [BOOL]
+                        skip testing iOS simulator targets
+  --skip-test-ios-32bit-simulator [BOOL]
+                        skip testing iOS 32 bit simulator targets
+  --skip-test-watchos-32bit-simulator [BOOL]
+                        skip testing watchOS 32 bit simulator targets
+  --skip-test-ios-host [BOOL]
+                        skip testing iOS device targets on the host machine
+                        (the phone itself)
+  --skip-test-tvos [BOOL]
+                        skip testing all tvOS targets. Equivalent to
+                        specifying both --skip-test-tvos-simulator and --skip-
+                        test-tvos-host
+  --skip-test-tvos-simulator [BOOL]
+                        skip testing tvOS simulator targets
+  --skip-test-tvos-host [BOOL]
+                        skip testing tvOS device targets on the host machine
+                        (the TV itself)
+  --skip-test-watchos [BOOL]
+                        skip testing all tvOS targets. Equivalent to
+                        specifying both --skip-test-watchos-simulator and
+                        --skip-test-watchos-host
+  --skip-test-watchos-simulator [BOOL]
+                        skip testing watchOS simulator targets
+  --skip-test-watchos-host [BOOL]
+                        skip testing watchOS device targets on the host
+                        machine (the watch itself)
+  --skip-test-android [BOOL]
+                        skip testing all Android targets.
+  --skip-test-android-host [BOOL]
+                        skip testing Android device targets on the host
+                        machine (the phone itself)
+  --skip-clean-swiftpm [BOOL]
+                        skip cleaning up swiftpm
+  --skip-clean-swift-driver [BOOL]
+                        skip cleaning up Swift driver
+  --skip-test-swiftpm [BOOL]
+                        skip testing swiftpm
+  --skip-test-swift-driver [BOOL]
+                        skip testing Swift driver
+  --skip-test-swiftsyntax [BOOL]
+                        skip testing SwiftSyntax
+  --skip-test-indexstore-db [BOOL]
+                        skip testing indexstore-db
+  --skip-test-sourcekit-lsp [BOOL]
+                        skip testing sourcekit-lsp
+  --skip-test-playgroundsupport [BOOL]
+                        skip testing PlaygroundSupport
+  --skip-test-skstresstester [BOOL]
+                        skip testing the SourceKit Stress tester
+  --skip-test-swiftformat [BOOL]
+                        skip testing swift-format
+  --skip-test-swiftevolve [BOOL]
+                        skip testing SwiftEvolve
+  --skip-test-toolchain-benchmarks [BOOL]
+                        skip testing toolchain benchmarks
+  --skip-test-swift-inspect [BOOL]
+                        skip testing swift_inspect
+
+Build settings specific for LLVM:
+  --llvm-targets-to-build LLVM_TARGETS_TO_BUILD
+                        LLVM target generators to build
+
+Build settings for Android:
+  --android-ndk PATH    An absolute path to the NDK that will be used as a
+                        libc implementation for Android builds
+  --android-api-level ANDROID_API_LEVEL
+                        The Android API level to target when building for
+                        Android. Currently only 21 or above is supported
+  --android-ndk-gcc-version [ANDROID_NDK_GCC_VERSION]
+                        The GCC version to use when building for Android.
+                        Currently only 4.9 is supported. 4.9 is also the
+                        default value. This option may be used when
+                        experimenting with versions of the Android NDK not
+                        officially supported by Swift
+  --android-icu-uc PATH
+                        Path to libicuuc.so
+  --android-icu-uc-include PATH
+                        Path to a directory containing headers for libicuuc
+  --android-icu-i18n PATH
+                        Path to libicui18n.so
+  --android-icu-i18n-include PATH
+                        Path to a directory containing headers libicui18n
+  --android-icu-data PATH
+                        Path to libicudata.so
+  --android-deploy-device-path PATH
+                        Path on an Android device to which built Swift stdlib
+                        products will be deployed. If running host tests,
+                        specify the "/data/local/tmp" directory.
+  --android-arch [ANDROID_ARCH]
+                        The target architecture when building for Android.
+                        Currently, only armv7, aarch64, and x86_64 are
+                        supported. armv7 is the default.
+
+Experimental language features:
+  --enable-experimental-differentiable-programming [BOOL]
+                        Enable experimental Swift differentiable programming
+                        language features.
+  --enable-experimental-concurrency [BOOL]
+                        Enable experimental Swift concurrency model.
+
+Unsupported options:
+  --build-jobs
+  --common-cmake-options
+  --only-execute
+  --skip-test-optimize-for-size
+  --skip-test-optimize-none-with-implicit-dynamic
+  --skip-test-optimized
+
+Build-script-impl arguments (for disambiguation):
+  --skip-build-cmark [BOOL]
+                        skip building cmark
+  --skip-build-llvm [BOOL]
+                        skip building llvm
+  --skip-build-swift [BOOL]
+                        skip building swift
+  --install-swift [BOOL]
+  --skip-test-swift [BOOL]
+
+Using option presets:
+
+  --preset-file=PATH    load presets from the specified file
+
+  --preset=NAME         use the specified option preset
+
+  The preset mode is mutually exclusive with other options.  It is not
+  possible to add ad-hoc customizations to a preset.  This is a deliberate
+  design decision.  (Rationale: a preset is a certain important set of
+  options that we want to keep in a centralized location.  If you need to
+  customize it, you should create another preset in a centralized location,
+  rather than scattering the knowledge about the build across the system.)
+
+  Presets support substitutions for controlled customizations.  Substitutions
+  are defined in the preset file.  Values for substitutions are supplied
+  using the name=value syntax on the command line.
+
+Any arguments not listed are forwarded directly to Swift's
+'build-script-impl'. See that script's help for details. The listed
+build-script-impl arguments are only for disambiguation in the argument parser.
+
+Environment variables
+---------------------
+
+This script respects a few environment variables, should you
+choose to set them:
+
+SWIFT_SOURCE_ROOT: a directory containing the source for LLVM, Clang, Swift.
+                   If this script is located in a Swift
+                   source directory, the location of SWIFT_SOURCE_ROOT will be
+                   inferred if the variable is not set.
+
+'build-script' expects the sources to be laid out in the following way:
+
+   $SWIFT_SOURCE_ROOT/llvm-project
+                     /swift
+                     /llbuild                    (optional)
+                     /swiftpm                    (optional, requires llbuild)
+                     /swift-syntax               (optional, requires swiftpm)
+                     /swift-stress-tester        (optional,
+                                                   requires swift-syntax)
+                     /swift-corelibs-xctest      (optional)
+                     /swift-corelibs-foundation  (optional)
+                     /swift-corelibs-libdispatch (optional)
+                     /icu                        (optional)
+
+SWIFT_BUILD_ROOT: a directory in which to create out-of-tree builds.
+                  Defaults to "$SWIFT_SOURCE_ROOT/build/".
+
+Preparing to run this script
+----------------------------
+
+  See README.md for instructions on cloning Swift subprojects.
+
+If you intend to use the -l, -L, --lldb, or --debug-lldb options.
+
+That's it; you're ready to go!
+
+Examples
+--------
+
+Given the above layout of sources, the simplest invocation of 'build-script' is
+just:
+
+  [~/src/s]$ ./swift/utils/build-script
+
+This builds LLVM, Clang, Swift and Swift standard library in debug mode.
+
+All builds are incremental.  To incrementally build changed files, repeat the
+same 'build-script' command.
+
+Typical uses of 'build-script'
+------------------------------
+
+To build everything with optimization without debug information:
+
+  [~/src/s]$ ./swift/utils/build-script -R
+
+To run tests, add '-t':
+
+  [~/src/s]$ ./swift/utils/build-script -R -t
+
+To run normal tests and validation tests, add '-T':
+
+  [~/src/s]$ ./swift/utils/build-script -R -T
+
+To build LLVM+Clang with optimization without debug information, and a
+debuggable Swift compiler:
+
+  [~/src/s]$ ./swift/utils/build-script -R --debug-swift
+
+To build a debuggable Swift standard library:
+
+  [~/src/s]$ ./swift/utils/build-script -R --debug-swift-stdlib
+
+iOS build targets are always configured and present, but are not built by
+default.  To build the standard library for OS X, iOS simulator and iOS device:
+
+  [~/src/s]$ ./swift/utils/build-script -R -i
+
+To run OS X and iOS tests that don't require a device:
+
+  [~/src/s]$ ./swift/utils/build-script -R -i -t
+
+To use 'make' instead of 'ninja', use '-m':
+
+  [~/src/s]$ ./swift/utils/build-script -m -R
+
+To create Xcode projects that can build Swift, use '-x':
+
+  [~/src/s]$ ./swift/utils/build-script -x -R
+
+Preset mode in build-script
+---------------------------
+
+All buildbots and automated environments use 'build-script' in *preset mode*.
+In preset mode, the command line only specifies the preset name and allows
+limited customization (extra output paths).  The actual options come from
+the selected preset in 'utils/build-presets.ini'.  For example, to build like
+the incremental buildbot, run:
+
+  [~/src/s]$ ./swift/utils/build-script --preset=buildbot_incremental
+
+To build with AddressSanitizer:
+
+  [~/src/s]$ ./swift/utils/build-script --preset=asan
+
+To build a root for Xcode XYZ, '/tmp/xcode-xyz-root.tar.gz':
+
+  [~/src/s]$ ./swift/utils/build-script --preset=buildbot_BNI_internal_XYZ \
+      install_destdir="/tmp/install"
+      install_symroot="/tmp/symroot"
+      installable_package="/tmp/xcode-xyz-root.tar.gz"
+
+If you have your own favorite set of options, you can create your own, local,
+preset.  For example, let's create a preset called 'ds' (which stands for
+Debug Swift):
+
+  $ cat > ~/.swift-build-presets
+  [preset: ds]
+  release
+  debug-swift
+  debug-swift-stdlib
+  test
+  build-subdir=ds
+
+To use it, specify the '--preset=' argument:
+
+  [~/src/s]$ ./swift/utils/build-script --preset=ds
+  ./swift/utils/build-script: using preset 'ds', which expands to
+  ./swift/utils/build-script --release --debug-swift --debug-swift-stdlib      --test
+  --build-subdir=ds --
+  ...
+
+Existing presets can be found in `utils/build-presets.ini`
+
+Philosophy
+----------
+
+While you can invoke CMake directly to build Swift, this tool will save you
+time by taking away the mechanical parts of the process, providing you controls
+for the important options.
+
+For all automated build environments, this tool is regarded as *the* *only* way
+to build Swift.  This is not a technical limitation of the Swift build system.
+It is a policy decision aimed at making the builds uniform across all
+environments and easily reproducible by engineers who are not familiar with the
+details of the setups of other systems or automated environments.
