@@ -1,3 +1,10 @@
+# Ignore
+
+## Jetbrains
+.idea
+
+## apple swift projects
+swift-project/swift
 swift-project/cmake
 swift-project/icu
 swift-project/cmark
@@ -26,3 +33,6 @@ swift-project/swift-xcode-playground-support
 swift-project/swiftpm
 swift-project/yams
 swift-project/build
+
+## llvm-project
+swift-project/llvm-project/llvm/cmake-build-debug
