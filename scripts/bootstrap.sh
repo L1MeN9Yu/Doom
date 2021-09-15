@@ -2,6 +2,20 @@
 
 set -e
 
-git clone https://github.com/apple/swift.git swift-project/swift
+SWIFT_TAG="swift-5.4.3-RELEASE"
 
-./swift-project/swift/utils/update-checkout --tag swift-5.4.3-RELEASE --clone
+function clone(){
+    git clone https://github.com/apple/swift.git swift-project/swift
+}
+
+function checkout(){
+    ./swift-project/swift/utils/update-checkout --tag $1 --clone
+}
+
+
+if [ "$#" -eq 0 ] ; then
+  clone
+  checkout "$SWIFT_TAG"
+else
+  checkout "$1" 
+fi
