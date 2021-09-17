@@ -40,8 +40,5 @@ swift-project/swiftpm
 swift-project/yams
 swift-project/build
 
-## llvm-project
-swift-project/llvm-project/llvm/cmake-build-debug
-
 ## build
 swift-nightly-install
