@@ -1,7 +1,13 @@
 # Ignore
 
+## Apple
+.DS_Store
+
 ## Jetbrains
 .idea
+
+## VSCode
+.vscode
 
 ## apple swift projects
 swift-project/swift
@@ -36,3 +42,6 @@ swift-project/build
 
 ## llvm-project
 swift-project/llvm-project/llvm/cmake-build-debug
+
+## build
+swift-nightly-install

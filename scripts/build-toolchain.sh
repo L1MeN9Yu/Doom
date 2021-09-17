@@ -54,7 +54,7 @@ PRESET_SUFFIX=
 
 case $(uname -s) in
   Darwin)
-    SWIFT_PACKAGE=doom
+    SWIFT_PACKAGE=buildbot_osx_package,no_test
     OS_SUFFIX=osx
   ;;
   Linux)
