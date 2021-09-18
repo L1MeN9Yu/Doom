@@ -6,6 +6,7 @@ SWIFT_TAG="swift-5.4.3-RELEASE"
 
 function clone(){
     git clone https://github.com/apple/swift.git swift-project/swift
+    git clone https://github.com/nlohmann/json.git dependencies/json
 }
 
 function checkout(){

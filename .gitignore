@@ -40,5 +40,9 @@ swift-project/swiftpm
 swift-project/yams
 swift-project/build
 
+## dependencies
+dependencies/json
+
 ## build
 swift-nightly-install
+*.o

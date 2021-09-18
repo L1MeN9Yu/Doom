@@ -1,27 +1,33 @@
-From 234a2ba15cb9dd3dfe783466555487ebbde1d902 Mon Sep 17 00:00:00 2001
+From db06dbeeb1c303820c5f382106b05a3c9f293461 Mon Sep 17 00:00:00 2001
 From: L1MeN9Yu <baal998.mophisto@gmail.com>
 Date: Fri, 17 Sep 2021 18:24:25 +0800
 Subject: [PATCH] [Doom] : Swift-5.4.3-RELEASE
 
 ---
  .gitignore                                    |    4 +
+ llvm/include/llvm/Transforms/Doom/Config.h    |   19 +
+ .../llvm/Transforms/Doom/Configurator.h       |   25 +
  .../llvm/Transforms/Doom/CryptoUtils.h        |  258 ++++
  .../llvm/Transforms/Doom/StringObfuscation.h  |   14 +
  llvm/include/llvm/Transforms/Doom/Utils.h     |   17 +
  llvm/lib/Transforms/CMakeLists.txt            |    1 +
- llvm/lib/Transforms/Doom/CMakeLists.txt       |   10 +
+ llvm/lib/Transforms/Doom/CMakeLists.txt       |   11 +
+ llvm/lib/Transforms/Doom/Configurator.cpp     |   25 +
  llvm/lib/Transforms/Doom/CryptoUtils.cpp      | 1116 +++++++++++++++++
  llvm/lib/Transforms/Doom/LLVMBuild.txt        |    8 +
- .../lib/Transforms/Doom/StringObfuscation.cpp |  218 ++++
+ .../lib/Transforms/Doom/StringObfuscation.cpp |  226 ++++
  llvm/lib/Transforms/Doom/Utils.cpp            |  153 +++
  llvm/lib/Transforms/IPO/LLVMBuild.txt         |    2 +-
  .../lib/Transforms/IPO/PassManagerBuilder.cpp |   47 +
  llvm/lib/Transforms/LLVMBuild.txt             |    2 +-
- 13 files changed, 1848 insertions(+), 2 deletions(-)
+ 16 files changed, 1926 insertions(+), 2 deletions(-)
+ create mode 100644 llvm/include/llvm/Transforms/Doom/Config.h
+ create mode 100644 llvm/include/llvm/Transforms/Doom/Configurator.h
  create mode 100644 llvm/include/llvm/Transforms/Doom/CryptoUtils.h
  create mode 100644 llvm/include/llvm/Transforms/Doom/StringObfuscation.h
  create mode 100644 llvm/include/llvm/Transforms/Doom/Utils.h
  create mode 100644 llvm/lib/Transforms/Doom/CMakeLists.txt
+ create mode 100644 llvm/lib/Transforms/Doom/Configurator.cpp
  create mode 100644 llvm/lib/Transforms/Doom/CryptoUtils.cpp
  create mode 100644 llvm/lib/Transforms/Doom/LLVMBuild.txt
  create mode 100644 llvm/lib/Transforms/Doom/StringObfuscation.cpp
@@ -40,6 +46,62 @@ index 1c8d4b15925d..1130610c7354 100644
 +llvm/cmake-build-debug/
 +# Doom End
 \ No newline at end of file
+diff --git a/llvm/include/llvm/Transforms/Doom/Config.h b/llvm/include/llvm/Transforms/Doom/Config.h
+new file mode 100644
+index 000000000000..d02398f3f091
+--- /dev/null
++++ b/llvm/include/llvm/Transforms/Doom/Config.h
+@@ -0,0 +1,19 @@
++//
++// Created by Mengyu Li on 2021/9/18.
++//
++
++#ifndef Doom_CONFIG_H
++#define Doom_CONFIG_H
++
++#include <string>
++
++namespace Doom {
++struct Config {
++  struct StringObfuscate {
++    bool Enable;
++  };
++  StringObfuscate StringObfuscate;
++};
++} // namespace Doom
++
++#endif // Doom_CONFIG_H
+diff --git a/llvm/include/llvm/Transforms/Doom/Configurator.h b/llvm/include/llvm/Transforms/Doom/Configurator.h
+new file mode 100644
+index 000000000000..0b29f7ec9533
+--- /dev/null
++++ b/llvm/include/llvm/Transforms/Doom/Configurator.h
+@@ -0,0 +1,25 @@
++//
++// Created by Mengyu Li on 2021/9/18.
++//
++
++#ifndef DOOM_CONFIGURATION_H
++#define DOOM_CONFIGURATION_H
++
++#include "llvm/Support/ManagedStatic.h"
++#include "llvm/Transforms/Doom/Config.h"
++
++namespace llvm {
++class Configurator;
++extern ManagedStatic<Configurator> SharedConfigurator;
++class Configurator {
++public:
++  Configurator();
++  virtual ~Configurator();
++  bool stringObfuscateEnabled();
++
++private:
++  std::shared_ptr<Doom::Config> Config;
++};
++} // namespace llvm
++
++#endif // DOOM_CONFIGURATION_H
 diff --git a/llvm/include/llvm/Transforms/Doom/CryptoUtils.h b/llvm/include/llvm/Transforms/Doom/CryptoUtils.h
 new file mode 100644
 index 000000000000..7297e3a08d75
@@ -306,7 +368,7 @@ index 000000000000..7297e3a08d75
 +#endif
 diff --git a/llvm/include/llvm/Transforms/Doom/StringObfuscation.h b/llvm/include/llvm/Transforms/Doom/StringObfuscation.h
 new file mode 100644
-index 000000000000..84809408006b
+index 000000000000..8052e2c6983c
 --- /dev/null
 +++ b/llvm/include/llvm/Transforms/Doom/StringObfuscation.h
 @@ -0,0 +1,14 @@
@@ -320,8 +382,8 @@ index 000000000000..84809408006b
 +#include "llvm/Pass.h"
 +
 +namespace llvm {
-+Pass *createStringObfuscation(bool flag);
-+}
++Pass *createStringObfuscation(bool Flag);
++} // namespace llvm
 +
 +#endif // LLVM_STRINGOBFUSCATION_H
 diff --git a/llvm/include/llvm/Transforms/Doom/Utils.h b/llvm/include/llvm/Transforms/Doom/Utils.h
@@ -358,24 +420,56 @@ index dda5f6de11e3..4c7917190334 100644
 +add_subdirectory(Doom)
 diff --git a/llvm/lib/Transforms/Doom/CMakeLists.txt b/llvm/lib/Transforms/Doom/CMakeLists.txt
 new file mode 100644
-index 000000000000..72805990fa9e
+index 000000000000..f941d6a0f65a
 --- /dev/null
 +++ b/llvm/lib/Transforms/Doom/CMakeLists.txt
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,11 @@
 +add_llvm_library(LLVMDoom
 +        StringObfuscation.cpp
 +        CryptoUtils.cpp
 +        Utils.cpp
++        Configurator.cpp
 +
 +        ADDITIONAL_HEADER_DIRS
-+        ${LLVM_MAIN_INCLUDE_DIR}/llvm/Transforms/Obfuscation
++        ${LLVM_MAIN_INCLUDE_DIR}/llvm/Transforms/Doom
 +        )
 +
 +add_dependencies(LLVMDoom intrinsics_gen)
+diff --git a/llvm/lib/Transforms/Doom/Configurator.cpp b/llvm/lib/Transforms/Doom/Configurator.cpp
+new file mode 100644
+index 000000000000..18d5b71a84af
+--- /dev/null
++++ b/llvm/lib/Transforms/Doom/Configurator.cpp
+@@ -0,0 +1,25 @@
++//
++// Created by Mengyu Li on 2021/9/18.
++//
++
++#include "llvm/Transforms/Doom/Configurator.h"
++#include "llvm/Transforms/Doom/Config.h"
++
++using namespace llvm;
++
++const std::string Path = ".Doom/config";
++
++namespace llvm {
++ManagedStatic<Configurator> SharedConfigurator;
++} // namespace llvm
++
++Configurator::Configurator() {
++  Config = nullptr;
++}
++Configurator::Configurator::~Configurator() {}
++bool Configurator::stringObfuscateEnabled() {
++  if (!Config) {
++    return false;
++  }
++  return true;
++}
 \ No newline at end of file
 diff --git a/llvm/lib/Transforms/Doom/CryptoUtils.cpp b/llvm/lib/Transforms/Doom/CryptoUtils.cpp
 new file mode 100644
-index 000000000000..323b9d14287b
+index 000000000000..c65319906c3b
 --- /dev/null
 +++ b/llvm/lib/Transforms/Doom/CryptoUtils.cpp
 @@ -0,0 +1,1116 @@
@@ -414,7 +508,7 @@ index 000000000000..323b9d14287b
 +
 +namespace llvm {
 +ManagedStatic<CryptoUtils> cryptoutils;
-+}
++} // namespace llvm
 +
 +const uint32_t AES_RCON[10] = {
 +    0x01000000UL, 0x02000000UL, 0x04000000UL, 0x08000000UL, 0x10000000UL,
@@ -1511,15 +1605,16 @@ index 000000000000..029b8698bf4b
 +
 diff --git a/llvm/lib/Transforms/Doom/StringObfuscation.cpp b/llvm/lib/Transforms/Doom/StringObfuscation.cpp
 new file mode 100644
-index 000000000000..c6607cfe3504
+index 000000000000..77d0c4a0eb2d
 --- /dev/null
 +++ b/llvm/lib/Transforms/Doom/StringObfuscation.cpp
-@@ -0,0 +1,218 @@
+@@ -0,0 +1,226 @@
 +//
 +// Created by Mengyu Li on 2021/9/15.
 +//
 +
 +#define DEBUG_TYPE "objdiv"
++#include <filesystem>
 +#include <sstream>
 +#include <string>
 +
@@ -1531,6 +1626,7 @@ index 000000000000..c6607cfe3504
 +#include "llvm/IR/Value.h"
 +#include "llvm/Pass.h"
 +#include "llvm/Support/raw_ostream.h"
++#include "llvm/Transforms/Doom/Configurator.h"
 +#include "llvm/Transforms/Doom/CryptoUtils.h"
 +#include "llvm/Transforms/Doom/StringObfuscation.h"
 +#include "llvm/Transforms/Doom/Utils.h"
@@ -1542,26 +1638,32 @@ index 000000000000..c6607cfe3504
 +
 +namespace llvm {
 +
-+struct encVar {
++struct EncVar {
 +public:
-+  GlobalVariable *var;
-+  uint8_t key;
++  GlobalVariable *Var;
++  uint8_t Key;
 +};
 +
 +class StringObfuscationPass : public llvm::ModulePass {
 +public:
 +  static char ID; // pass identification
-+  bool is_flag = false;
++  bool IsFlag = false;
 +  StringObfuscationPass() : ModulePass(ID) {}
-+  StringObfuscationPass(bool flag) : ModulePass(ID) { is_flag = flag; }
++  StringObfuscationPass(bool Flag) : ModulePass(ID) { IsFlag = Flag; }
 +
 +  virtual bool runOnModule(Module &M) {
-+    if (!is_flag)
++    if (!IsFlag && !SharedConfigurator->stringObfuscateEnabled()) {
 +      return false;
-+    errs()<< "[Doom] - Module Name :" << M.getName() << "\n";
-+    std::vector<GlobalVariable *> toDelConstGlob;
++    }
++
++    outs() << "[DOOM] - "
++           << "String Obfuscate for : " << std::__fs::filesystem::current_path()
++           << M.getName()
++           << "\n";
++
++    std::vector<GlobalVariable *> ToDelConstGlob;
 +    // std::vector<GlobalVariable*> encGlob;
-+    std::vector<encVar *> encGlob;
++    std::vector<EncVar *> EncGlob;
 +    for (Module::global_iterator gi = M.global_begin(), ge = M.global_end();
 +         gi != ge; ++gi) {
 +      // Loop over all global variables
@@ -1591,55 +1693,55 @@ index 000000000000..c6607cfe3504
 +        std::string tmp = gv->getName().str();
 +        //  errs()<<"GV: "<<*gv<<"\n";
 +
-+        Constant *initializer = gv->getInitializer();
-+        ConstantDataSequential *cdata =
-+            dyn_cast<ConstantDataSequential>(initializer);
-+        if (cdata) {
-+          const char *orig = cdata->getRawDataValues().data();
-+          unsigned len = cdata->getNumElements() * cdata->getElementByteSize();
++        Constant *Initializer = gv->getInitializer();
++        ConstantDataSequential *Cdata =
++            dyn_cast<ConstantDataSequential>(Initializer);
++        if (Cdata) {
++          const char *Orig = Cdata->getRawDataValues().data();
++          unsigned Len = Cdata->getNumElements() * Cdata->getElementByteSize();
 +
-+          encVar *cur = new encVar();
-+          cur->var = dynGV;
-+          cur->key = llvm::cryptoutils->get_uint8_t();
++          EncVar *Cur = new EncVar();
++          Cur->Var = dynGV;
++          Cur->Key = llvm::cryptoutils->get_uint8_t();
 +          // casting away const is undef. behavior in C++
 +          // TODO a clean implementation would retrieve the data, generate a new
 +          // constant set the correct type, and copy the data over.
 +          // char *encr = new char[len];
 +          // Constant *initnew = ConstantDataArray::getString(M.getContext(),
 +          // encr, true);
-+          char *encr = const_cast<char *>(orig);
++          char *Encr = const_cast<char *>(Orig);
 +          // Simple xor encoding
-+          for (unsigned i = 0; i != len; ++i) {
-+            encr[i] = orig[i] ^ cur->key;
++          for (unsigned i = 0; i != Len; ++i) {
++            Encr[i] = Orig[i] ^ Cur->Key;
 +          }
 +
 +          // FIXME Second part of the unclean hack.
-+          dynGV->setInitializer(initializer);
++          dynGV->setInitializer(Initializer);
 +
 +          // Prepare to add decode function for this variable
-+          encGlob.push_back(cur);
++          EncGlob.push_back(Cur);
 +        } else {
 +          // just copying default initializer for now
-+          dynGV->setInitializer(initializer);
++          dynGV->setInitializer(Initializer);
 +        }
 +
 +        // redirect references to new GV and remove old one
 +        gv->replaceAllUsesWith(dynGV);
-+        toDelConstGlob.push_back(gv);
++        ToDelConstGlob.push_back(gv);
 +      }
 +    }
 +
 +    // actuallte delete marked globals
-+    for (unsigned i = 0, e = toDelConstGlob.size(); i != e; ++i)
-+      toDelConstGlob[i]->eraseFromParent();
++    for (unsigned i = 0, e = ToDelConstGlob.size(); i != e; ++i)
++      ToDelConstGlob[i]->eraseFromParent();
 +
-+    addDecodeFunction(&M, &encGlob);
++    addDecodeFunction(&M, &EncGlob);
 +
 +    return true;
 +  }
 +
 +private:
-+  void addDecodeFunction(Module *mod, std::vector<encVar *> *gvars) {
++  void addDecodeFunction(Module *mod, std::vector<EncVar *> *gvars) {
 +    // Declare and add the function definition
 +    // errs()<<"Successful enter decode function"<<"\n";
 +    std::vector<Type *> FuncTy_args;
@@ -1665,8 +1767,8 @@ index 000000000000..c6607cfe3504
 +    builder.SetInsertPoint(entry);
 +
 +    for (unsigned i = 0, e = gvars->size(); i != e; ++i) {
-+      GlobalVariable *gvar = (*gvars)[i]->var;
-+      uint8_t key = (*gvars)[i]->key;
++      GlobalVariable *gvar = (*gvars)[i]->Var;
++      uint8_t key = (*gvars)[i]->Key;
 +
 +      Constant *init = gvar->getInitializer();
 +      ConstantDataSequential *cdata = dyn_cast<ConstantDataSequential>(init);
@@ -1730,8 +1832,8 @@ index 000000000000..c6607cfe3504
 +    X("GVDiv", "Global variable (i.e., const char*) diversification pass",
 +      false, true);
 +
-+Pass *llvm::createStringObfuscation(bool flag) {
-+  return new StringObfuscationPass(flag);
++Pass *llvm::createStringObfuscation(bool Flag) {
++  return new StringObfuscationPass(Flag);
 +}
 diff --git a/llvm/lib/Transforms/Doom/Utils.cpp b/llvm/lib/Transforms/Doom/Utils.cpp
 new file mode 100644
@@ -1903,7 +2005,7 @@ index ea207e81fce8..abb533f8930c 100644
 -required_libraries = AggressiveInstCombine Analysis BitReader BitWriter Core FrontendOpenMP InstCombine IRReader Linker Object ProfileData Scalar Support TransformUtils Vectorize Instrumentation
 +required_libraries = AggressiveInstCombine Analysis BitReader BitWriter Core FrontendOpenMP InstCombine IRReader Linker Object ProfileData Scalar Support TransformUtils Vectorize Instrumentation Doom
 diff --git a/llvm/lib/Transforms/IPO/PassManagerBuilder.cpp b/llvm/lib/Transforms/IPO/PassManagerBuilder.cpp
-index 04f2099b3dd4..748f5f7372b2 100644
+index 04f2099b3dd4..974d7e1ef9d0 100644
 --- a/llvm/lib/Transforms/IPO/PassManagerBuilder.cpp
 +++ b/llvm/lib/Transforms/IPO/PassManagerBuilder.cpp
 @@ -48,6 +48,8 @@
@@ -1938,7 +2040,7 @@ index 04f2099b3dd4..748f5f7372b2 100644
 +static cl::opt<std::string> Seed("seed", cl::init(""),
 +                                 cl::desc("seed for the random"));
 +
-+static cl::opt<bool> StringObf("sobf", cl::init(true),
++static cl::opt<bool> StringObf("sobf", cl::init(false),
 +                               cl::desc("Enable the string obfuscation"));
 +
  static cl::opt<bool> EnableGVNSink(
