@@ -2,7 +2,7 @@
 
 set -e
 
-SWIFT_TAG="swift-5.4.3-RELEASE"
+SWIFT_TAG="swift-5.5.0-RELEASE"
 
 function clone(){
     git clone https://github.com/apple/swift.git swift-project/swift
